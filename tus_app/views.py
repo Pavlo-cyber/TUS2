@@ -1,23 +1,9 @@
-from fastapi import FastAPI
-from tus_app import app, db_session
-from tus_app.models import User
 from fastapi.security import HTTPBasic
-
-session = db_session()
+from tus_app import app
+from tus_app.Routers import cv, register, login
 
 auth = HTTPBasic()
 
-
-@app.get('/')
-def index():
-    return {'data': {'text': 'main_page'}}
-
-
-@app.get('/tutor')
-def tutors():
-    return {'data': {'text': 'tutor_data'}}
-
-
-@app.get('/tutor/{id}')
-def tutor(id: int):
-    return {'data': id}
+app.include_router(cv.router)
+app.include_router(register.router)
+app.include_router(login.router)
