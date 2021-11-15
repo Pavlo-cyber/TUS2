@@ -1,5 +1,5 @@
 from datetime import timedelta, datetime
-from typing import Optional, Any
+from typing import Optional
 from sqlalchemy.orm import Session
 from tus_app import get_db
 from tus_app.schema import TokenData

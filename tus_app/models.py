@@ -21,7 +21,7 @@ class User(BaseModel):
     password_hash = Column(String(300), unique=False, nullable=False)
     email = Column(String(60), unique=True, nullable=False)
     phone = Column(String(15), unique=True, nullable=True)
-    photo = Column(BLOB, unique=False, nullable=True)  # TODO: create default blob object
+    photo = Column(String(200), unique=False, nullable=True, default="/Users/pavlogoncaruk/WebstormProjects/tus_test/src/img1.jpg")
     role = Column(Enum('Tutor', 'Admin', 'Client'), unique=False, nullable=False, default='Client')
 
     def __repr__(self):

@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `tus_db`.`User` (
   `password_hash` VARCHAR(300) NOT NULL,
   `email` VARCHAR(60) NOT NULL,
   `phone` VARCHAR(15) NULL,
-  `photo` BLOB NULL,
+  `photo` VARCHAR(200) NULL,
   `role` ENUM('Tutor', 'Admin', 'Client') NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE)

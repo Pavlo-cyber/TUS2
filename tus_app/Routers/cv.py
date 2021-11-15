@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends, status, HTTPException
-
+import json
+from typing import List
 from sqlalchemy.orm import Session
 from tus_app import models, get_db
 from tus_app import schema
@@ -22,11 +23,16 @@ def get_cv(id, db: Session = Depends(get_db)):
 
 @router.post('/', status_code=status.HTTP_201_CREATED, tags=['cv'])
 def add_cv(cv: schema.CV, db: Session = Depends(get_db), current_user: schema.User = Depends(token.get_current_user)):
-    user= db.query(models.User).filter(models.User.username == current_user.username).first()
+    user = db.query(models.User).filter(models.User.username == current_user.username).first()
     new_cv = models.CV(text=cv.text, rating=cv.rating, user_id=user.id)
     db.add(new_cv)
     db.commit()
     db.refresh(new_cv)
+    obj = db.query(models.CV).order_by(models.CV.id.desc()).first()
+    for subject in cv.subject:
+        new_subject = models.Subject(name=subject.name, cv_id=obj.id ,cv_user_id=user.id)
+        db.add(new_subject)
+        db.commit()
     return new_cv
 
 

@@ -7,12 +7,12 @@ from tus_app.hashing import Hash
 from tus_app.token import *
 
 router = APIRouter(
-    prefix='/login',
-    tags=['login']
+
+    tags=['Authentication']
 )
 
 
-@router.post('/')
+@router.post('/login', response_model=schema.Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.username == form_data.username).first()
     if not user:
