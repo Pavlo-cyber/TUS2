@@ -4,14 +4,22 @@ from pydantic import BaseModel, EmailStr
 from enum import Enum
 
 
-class Subject(BaseModel):
-    name: str
+class Subject(str, Enum):
+    Math = 'Math'
+    English = 'English'
+    Physics = 'Physics'
+    German = 'German'
+    Biology = 'Biology'
+    History = 'History'
+    Astronomy = 'Astronomy'
+    Chemistry = 'Chemistry'
+    Literature = 'Literature'
 
 
 class CV(BaseModel):
-    subject: List[Subject]
+    subject: Subject
     text: str
-    rating: float
+    rating: Optional[float] = 5.0
 
 
 class RoleEnum(str, Enum):
@@ -29,7 +37,6 @@ class User(BaseModel):
     email: EmailStr
     role: RoleEnum
 
-
     class Config:
         use_enum_values = True
 
@@ -46,3 +53,19 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+
+
+class CVResponse(BaseModel):
+    id: int
+    subject: str
+    first_name: str
+    last_name: str
+    text: str
+    rating: float
+    photo: Optional[str] = None
+    email: str
+    phone: Optional[str] = None
+
+
+class Review(BaseModel):
+    text: str

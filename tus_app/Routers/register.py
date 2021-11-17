@@ -1,4 +1,5 @@
 from fastapi import Depends, status,APIRouter
+from fastapi.openapi.models import Response
 from sqlalchemy.orm import Session
 from tus_app import models
 from tus_app import schema, get_db
@@ -26,6 +27,7 @@ def add_user(user: schema.User, db: Session = Depends(get_db)):
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
+        return new_user
     else:
         return "User with that username is already exist"
 

@@ -2,6 +2,8 @@ from fastapi import APIRouter
 from fastapi import Depends, status, HTTPException
 import json
 from typing import List
+
+from pydantic import parse_obj_as
 from sqlalchemy.orm import Session
 from tus_app import models, get_db
 from tus_app import schema
@@ -21,32 +23,44 @@ def get_cv(id, db: Session = Depends(get_db)):
     return cv
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED, tags=['cv'])
+@router.post('/', status_code=status.HTTP_201_CREATED)
 def add_cv(cv: schema.CV, db: Session = Depends(get_db), current_user: schema.User = Depends(token.get_current_user)):
     user = db.query(models.User).filter(models.User.username == current_user.username).first()
     new_cv = models.CV(text=cv.text, rating=cv.rating, user_id=user.id)
     db.add(new_cv)
     db.commit()
-    db.refresh(new_cv)
     obj = db.query(models.CV).order_by(models.CV.id.desc()).first()
-    for subject in cv.subject:
-        new_subject = models.Subject(name=subject.name, cv_id=obj.id ,cv_user_id=user.id)
-        db.add(new_subject)
-        db.commit()
+    new_subject = models.Subject(name=cv.subject, cv_id=obj.id, cv_user_id=user.id)
+    db.add(new_subject)
+    db.commit()
     return new_cv
 
 
 @router.get('/')
 def get_all_cv(db: Session = Depends(get_db)):
     all_cv = db.query(models.CV).all()
-    return all_cv
+    just_data = []
+    for cv in all_cv:
+        subjects = []
+        new_subject = db.query(models.Subject).filter(models.Subject.cv_id == cv.id).first()
+        user = db.query(models.User).filter(models.User.id == cv.user_id).first()
+        just_data.append(
+            { "id": cv.id, "subject": new_subject.name, "first_name": user.first_name, "last_name": user.last_name, "text": cv.text,
+             "rating": cv.rating, "photo": user.photo, "email": user.email, "phone": user.phone})
+    m = parse_obj_as(List[schema.CVResponse], just_data)
+    return just_data
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_cv(id, db: Session = Depends(get_db)):
+def delete_cv(id, db: Session = Depends(get_db),current_user: schema.User = Depends(token.get_current_user)):
     cv = db.query(models.CV).filter(models.CV.id == id)
-    if not cv:
+    if not cv.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tutor with id {id} not available")
+    for elem in cv:
+        if elem.user_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=f"CV with {id} not allowed")
+    for elem in cv:
+        db.query(models.Subject).filter(models.Subject.cv_id == elem.id).delete(synchronize_session=False)
     cv.delete(synchronize_session=False)
     db.commit()
     return "done"
