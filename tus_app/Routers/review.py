@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi import Depends, status, HTTPException
 import json
 from typing import List
+from datetime import datetime
 
 from pydantic import parse_obj_as
 from sqlalchemy.orm import Session
@@ -14,12 +15,19 @@ router = APIRouter(
     tags=['review']
 )
 
+
 @router.post('/')
-def add_review(review: schema.Review,db: Session = Depends(get_db), current_user: schema.User = Depends(token.get_current_user)):
-    new_review = models.Review(text =review.text,user_id=current_user.id)
+def add_review(review: schema.Review, db: Session = Depends(get_db),
+               current_user: schema.User = Depends(token.get_current_user)):
+    new_review = models.Review(text=review.text, user_id=current_user.id)
     db.add(new_review)
     db.commit()
+    f = open("log.txt", "a")
+    date = datetime.now()
+    f.write(f'{date} User with username {current_user.username} add new review\n')
+    f.close()
     return new_review
+
 
 @router.get('/')
 def get_all(db: Session = Depends(get_db)):
@@ -34,10 +42,14 @@ def get_all(db: Session = Depends(get_db)):
 
 
 @router.delete('/{id}')
-def delete_review(id,db: Session = Depends(get_db), current_user: schema.User = Depends(token.get_current_user)):
+def delete_review(id, db: Session = Depends(get_db), current_user: schema.User = Depends(token.get_current_user)):
     review = db.query(models.Review).filter(models.Review.id == id)
     if not review.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Review with id {id} not available")
     review.delete(synchronize_session=False)
     db.commit()
+    f = open("log.txt", "a")
+    date = datetime.now()
+    f.write(f'{date} User with username {current_user.username} delete review\n')
+    f.close()
     return "done"

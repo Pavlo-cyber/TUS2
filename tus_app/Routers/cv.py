@@ -1,8 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends, status, HTTPException
-import json
 from typing import List
-
+from datetime import datetime
 from pydantic import parse_obj_as
 from sqlalchemy.orm import Session
 from tus_app import models, get_db
@@ -23,17 +22,23 @@ def get_cv(id, db: Session = Depends(get_db)):
     return cv
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED)
+@router.post('/')
 def add_cv(cv: schema.CV, db: Session = Depends(get_db), current_user: schema.User = Depends(token.get_current_user)):
     user = db.query(models.User).filter(models.User.username == current_user.username).first()
+    f = open("log.txt", "a")
+    date = datetime.now()
+    f.write(f'{date} User with username  {user.username} add new CV\n')
+    f.close()
     new_cv = models.CV(text=cv.text, rating=cv.rating, user_id=user.id)
     db.add(new_cv)
     db.commit()
+    db.refresh(new_cv)
     obj = db.query(models.CV).order_by(models.CV.id.desc()).first()
     new_subject = models.Subject(name=cv.subject, cv_id=obj.id, cv_user_id=user.id)
     db.add(new_subject)
     db.commit()
-    return new_cv
+    db.refresh(new_subject)
+    return new_subject
 
 
 @router.get('/')
@@ -51,17 +56,20 @@ def get_all_cv(db: Session = Depends(get_db)):
     return just_data
 
 
-@router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/{id}')
 def delete_cv(id, db: Session = Depends(get_db),current_user: schema.User = Depends(token.get_current_user)):
-    cv = db.query(models.CV).filter(models.CV.id == id)
-    if not cv.first():
+    cv = db.query(models.CV).filter(models.CV.id == id).first()
+    if not cv:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tutor with id {id} not available")
-    for elem in cv:
-        if elem.user_id != current_user.id:
-            raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=f"CV with {id} not allowed")
-    for elem in cv:
-        db.query(models.Subject).filter(models.Subject.cv_id == elem.id).delete(synchronize_session=False)
-    cv.delete(synchronize_session=False)
+    if cv.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=f"CV with {id} not allowed")
+    f = open("log.txt", "a")
+    date = datetime.now()
+    f.write(f'{date} User with username {current_user.username} delete CV\n')
+    f.close()
+    db.query(models.Subject).filter(models.Subject.cv_id == id).delete(synchronize_session=False)
+    db.commit()
+    db.query(models.CV).filter(models.CV.id == id).delete(synchronize_session=False)
     db.commit()
     return "done"
 

@@ -69,9 +69,7 @@ class Subject(BaseModel):
     __tablename__ = 'Subject'
 
     id = Column(Integer, primary_key=True)
-    name = Column(
-        Enum('English', 'Germany', 'History', 'Astronomy', 'Math', 'Chemistry', 'Physics', 'Biology', 'Literature'),
-        unique=False, nullable=True)
+    name = Column(String, unique=False, nullable=True)
 
     cv_id = Column(Integer, ForeignKey("CV.id"), unique=True, nullable=False)
     cv_user_id = Column(Integer, ForeignKey("User.id"), unique=False, nullable=False)

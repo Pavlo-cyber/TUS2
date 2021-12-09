@@ -4,20 +4,10 @@ from pydantic import BaseModel, EmailStr
 from enum import Enum
 
 
-class Subject(str, Enum):
-    Math = 'Math'
-    English = 'English'
-    Physics = 'Physics'
-    German = 'German'
-    Biology = 'Biology'
-    History = 'History'
-    Astronomy = 'Astronomy'
-    Chemistry = 'Chemistry'
-    Literature = 'Literature'
 
 
 class CV(BaseModel):
-    subject: Subject
+    subject: str
     text: str
     rating: Optional[float] = 5.0
 

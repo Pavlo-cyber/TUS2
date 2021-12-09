@@ -61,7 +61,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `tus_db`.`Subject` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `name` ENUM('English', 'German', 'Chemistry', 'Math', 'Biology', 'History', 'Physics', 'Astronomy', 'Literature') NOT NULL,
+  `name` VARCHAR(60) NOT NULL,
   `cv_id` INT UNSIGNED NOT NULL,
   `cv_user_id` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`, `cv_id`, `cv_user_id`),
